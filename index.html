@@ -58,15 +58,25 @@ svg{display:block;flex:none}
 .badge{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--on-brand);color:var(--brand-deep);font-size:.8rem;font-weight:700}
 
 /* hero */
-.hero{background:var(--brand);color:var(--on-brand);background-image:radial-gradient(circle at 20% 30%,rgba(255,247,240,.16) 0 1.5px,transparent 2.5px),radial-gradient(circle at 70% 75%,rgba(255,247,240,.12) 0 1.5px,transparent 2.5px);background-size:84px 84px,126px 126px}
-.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;padding-top:44px;padding-bottom:48px}
+.hero{background:var(--brand);color:var(--on-brand);overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:center;padding-top:36px;padding-bottom:40px}
 .eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
-h1{font:700 clamp(2.2rem,6vw,3.7rem)/1.04 var(--display);margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
-.hero p.lead{font-size:1.08rem;max-width:46ch;margin:0 0 24px;color:rgba(255,247,240,.88)}
+h1{font:700 clamp(2rem,5.4vw,3.2rem)/1.06 var(--display);margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
+.hero p.lead{font-size:1.02rem;max-width:42ch;margin:0 0 22px;color:rgba(255,247,240,.88)}
 .hero .cta{display:flex;flex-wrap:wrap;gap:12px}
 .hero .note{margin:18px 0 0;font-size:.88rem;color:rgba(255,247,240,.72)}
-.hero figure{margin:0;justify-self:end;width:100%;max-width:340px;border-radius:20px;overflow:hidden;border:6px solid var(--on-brand);box-shadow:0 18px 40px rgba(0,0,0,.35);transform:rotate(2deg);aspect-ratio:3/4}
-.hero figure img{width:100%;height:100%;object-fit:cover;display:block}
+.santa{justify-self:end;align-self:end;margin-bottom:-40px;width:100%;max-width:280px;height:auto;overflow:visible}
+.santa .halo{fill:rgba(255,247,240,.07)}
+.santa .bob{animation:bob 3.4s ease-in-out infinite}
+.santa .wave{transform-origin:191px 214px;animation:wave 1.3s ease-in-out infinite alternate}
+.santa .pom{transform-origin:206px 80px;animation:sway 2.6s ease-in-out infinite alternate}
+.santa .eyes{transform-box:fill-box;transform-origin:center;animation:blink 4.6s infinite}
+.santa .fl{fill:#fff8f2;opacity:0;animation:fall 7s linear infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes wave{from{transform:rotate(14deg)}to{transform:rotate(42deg)}}
+@keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes fall{0%{transform:translateY(-10px);opacity:0}10%{opacity:.85}90%{opacity:.85}100%{transform:translateY(310px);opacity:0}}
 
 /* vitrine */
 .shop{padding-top:40px;padding-bottom:56px}
@@ -149,7 +159,7 @@ textarea{min-height:84px;resize:vertical}
 .lb-actions .btn.ghost{border-color:rgba(255,255,255,.5);color:#fff}
 @media (max-width:560px){
   .hero .wrap{grid-template-columns:1fr;padding-top:32px;padding-bottom:36px}
-  .hero figure{display:none}
+  .santa{order:2;justify-self:end;max-width:150px;margin-top:-8px;margin-bottom:-36px}
   .logo{font-size:.95rem;white-space:nowrap}
   .d{display:none}
   .m{display:inline}
@@ -160,7 +170,7 @@ textarea{min-height:84px;resize:vertical}
   .bar .row .btn{flex:1}
   .bar .row .btn.ghost{flex:none}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}.shot:hover img{transform:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.santa *{animation:none!important}.santa .fl{opacity:0}.santa .wave{transform:rotate(28deg)}.shot:hover img{transform:none}}
 
 /* base de página inteira */
 [hidden]{display:none!important}
@@ -190,14 +200,41 @@ body{margin:0}
     <div>
       <p class="eyebrow">Catálogo Natal 2026</p>
       <h1>Monte o Natal da sua casa</h1>
-      <p class="lead">17 peças de decoração, de presépios e luminárias a bonecos e quebra-nozes. Escolha as que quiser, monte sua lista e peça o orçamento direto pelo WhatsApp.</p>
+      <p class="lead">17 peças de decoração de Natal. Escolha, monte sua lista e peça o orçamento pelo WhatsApp.</p>
       <div class="cta">
         <a class="btn wa" href="#produtos" id="goShop">Ver produtos</a>
         <a class="btn light" id="heroWa" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
       </div>
       <p class="note">Consulte valores, cores e disponibilidade.</p>
     </div>
-    <figure><img src="img/p08.jpg" alt="Luminária Poste com boneco de neve, árvore e presentes"></figure>
+    <svg class="santa" viewBox="0 0 260 300" role="img" aria-label="Papai Noel acenando">
+      <circle class="halo" cx="130" cy="170" r="118"/>
+      <circle class="fl" cx="28" cy="0" r="3" style="animation-duration:7s;animation-delay:-1s"/>
+      <circle class="fl" cx="70" cy="0" r="2" style="animation-duration:9s;animation-delay:-5s"/>
+      <circle class="fl" cx="112" cy="0" r="3.5" style="animation-duration:8s;animation-delay:-3s"/>
+      <circle class="fl" cx="158" cy="0" r="2" style="animation-duration:6.5s;animation-delay:-4s"/>
+      <circle class="fl" cx="196" cy="0" r="3" style="animation-duration:8.5s;animation-delay:-2s"/>
+      <circle class="fl" cx="236" cy="0" r="2.5" style="animation-duration:7.5s;animation-delay:-6s"/>
+      <g class="bob">
+        <path d="M56 340V300C56 222 88 200 130 200C172 200 204 222 204 300V340Z" fill="#d93a3a"/>
+        <rect x="121" y="224" width="18" height="116" rx="9" fill="#efdfd4"/>
+        <rect x="56" y="262" width="148" height="16" fill="#241516"/>
+        <rect x="122" y="263" width="16" height="14" rx="3" fill="none" stroke="#e0bd7c" stroke-width="3"/>
+        <g transform="rotate(8 62 214)"><rect x="49" y="214" width="26" height="62" rx="13" fill="#d93a3a"/><rect x="49" y="262" width="26" height="12" fill="#fff8f2"/><circle cx="62" cy="282" r="11" fill="#fff8f2"/></g>
+        <g class="wave"><rect x="178" y="150" width="26" height="70" rx="13" fill="#d93a3a"/><rect x="178" y="152" width="26" height="12" fill="#fff8f2"/><circle cx="191" cy="142" r="12" fill="#fff8f2"/></g>
+        <g transform="translate(0 14)">
+          <ellipse cx="130" cy="118" rx="42" ry="38" fill="#f6c9a8"/>
+          <path d="M88 112C86 160 104 212 130 214C156 212 174 160 172 112C160 128 148 130 130 128C112 130 100 128 88 112Z" fill="#fff8f2"/>
+          <ellipse cx="114" cy="130" rx="18" ry="11" fill="#fff8f2" transform="rotate(-12 114 130)"/>
+          <ellipse cx="146" cy="130" rx="18" ry="11" fill="#fff8f2" transform="rotate(12 146 130)"/>
+          <circle cx="130" cy="122" r="8" fill="#ee9a8d"/>
+          <g class="eyes"><circle cx="112" cy="104" r="4" fill="#241516"/><circle cx="148" cy="104" r="4" fill="#241516"/></g>
+        </g>
+        <path d="M84 100C84 56 106 36 140 36C170 36 194 52 206 80L184 104Z" fill="#d93a3a"/>
+        <rect x="80" y="90" width="100" height="22" rx="11" fill="#fff8f2"/>
+        <circle class="pom" cx="208" cy="82" r="12" fill="#fff8f2"/>
+      </g>
+    </svg>
   </div>
 </section>
 
