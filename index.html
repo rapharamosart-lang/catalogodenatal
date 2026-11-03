@@ -45,6 +45,8 @@ svg{display:block;flex:none}
 .btn.ghost:hover{border-color:var(--brand)}
 .btn.light{background:transparent;border-color:rgba(255,247,240,.55);color:var(--on-brand)}
 .btn.light:hover{background:rgba(255,247,240,.12)}
+.btn.light[aria-pressed="true"]{background:rgba(255,247,240,.18);border-color:var(--on-brand)}
+.hero.music .santa .wave{animation-duration:.6s}
 .btn{white-space:nowrap}
 .m{display:none}
 .btn.sm{padding:8px 14px;min-height:40px;font-size:.9rem}
@@ -204,6 +206,7 @@ body{margin:0}
       <div class="cta">
         <a class="btn wa" href="#produtos" id="goShop">Ver produtos</a>
         <a class="btn light" id="heroWa" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
+        <button class="btn light" id="musicBtn" type="button" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="16" r="2.5"/></svg><span id="musicLbl">Tocar música</span></button>
       </div>
       <p class="note">Consulte valores, cores e disponibilidade.</p>
     </div>
@@ -443,6 +446,53 @@ body{margin:0}
     btn.disabled = false;
   }
 
+  /* musiquinha: Jingle Bells (domínio público), tocada com osciladores */
+  var MUSIC = (function(){
+    var ctx = null, master = null, timer = null, nextStart = 0, Q = 0.4, REST = 2;
+    var N = {C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.0};
+    var A = [['E4',1],['E4',1],['E4',2],['E4',1],['E4',1],['E4',2],['E4',1],['G4',1],['C4',1.5],['D4',.5],['E4',4]];
+    var B = [['F4',1],['F4',1],['F4',1.5],['F4',.5],['F4',1],['E4',1],['E4',1],['E4',.5],['E4',.5],['E4',1],['D4',1],['D4',1],['E4',1],['D4',2],['G4',2]];
+    var C = [['G4',1],['G4',1],['F4',1],['D4',1],['C4',4]];
+    var SONG = A.concat(B, A, C);
+    function tone(f, t, d){
+      var end = t + Math.max(d, .5) * 1.7;
+      var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), g2 = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      o2.type = 'sine'; o2.frequency.value = f * 2.01; g2.gain.value = .3;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(.22, t + .012);
+      g.gain.exponentialRampToValueAtTime(0.0001, end);
+      o.connect(g); o2.connect(g2); g2.connect(g); g.connect(master);
+      o.start(t); o2.start(t); o.stop(end + .05); o2.stop(end + .05);
+    }
+    function schedule(t){
+      for (var i=0;i<SONG.length;i++){ tone(N[SONG[i][0]] * 2, t, SONG[i][1] * Q); t += SONG[i][1] * Q; }
+      return t + REST * Q;
+    }
+    function tick(){ if (!ctx || ctx.state !== 'running') return; while (nextStart < ctx.currentTime + 4) nextStart = schedule(nextStart); }
+    return {
+      play: function(){
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        try {
+          if (!ctx){ ctx = new AC(); master = ctx.createGain(); master.gain.value = .5; master.connect(ctx.destination); nextStart = ctx.currentTime + .15; timer = setInterval(tick, 400); }
+          var r = ctx.resume(); if (r && r.then) r.then(tick);
+          tick(); return true;
+        } catch(e){ return false; }
+      },
+      pause: function(){ if (ctx) { try { ctx.suspend(); } catch(e){} } }
+    };
+  })();
+  var musicOn = false;
+  function setMusic(on){
+    if (on && !MUSIC.play()) { on = false; $('musicLbl').textContent = 'Som indisponível'; setTimeout(function(){ $('musicLbl').textContent = 'Tocar música'; }, 2200); return; }
+    if (!on) MUSIC.pause();
+    musicOn = on;
+    $('musicBtn').setAttribute('aria-pressed', on);
+    $('musicLbl').textContent = on ? 'Pausar música' : 'Tocar música';
+    document.querySelector('.hero').classList.toggle('music', on);
+  }
+
   /* eventos */
   $('chips').addEventListener('click', function(e){
     var b = e.target.closest('[data-cat]'); if (!b) return;
@@ -461,6 +511,8 @@ body{margin:0}
   });
   $('fName').addEventListener('input', syncChrome);
   $('fNotes').addEventListener('input', syncChrome);
+  $('musicBtn').addEventListener('click', function(){ setMusic(!musicOn); });
+  document.addEventListener('visibilitychange', function(){ if (document.hidden && musicOn) setMusic(false); });
   $('shareBtn').addEventListener('click', shareWithPhotos);
   $('hdrQuote').addEventListener('click', function(e){ if (total()) { e.preventDefault(); openSheet(); } });
   $('barOpen').addEventListener('click', openSheet);
