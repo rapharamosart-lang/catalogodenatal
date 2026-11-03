@@ -129,6 +129,10 @@ label{display:block;font-size:.85rem;font-weight:700;margin:0 0 6px}
 input[type=text],textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
 textarea{min-height:84px;resize:vertical}
 .field{margin-bottom:14px}
+.share{margin-top:14px;padding-top:14px;border-top:1.5px solid var(--line)}
+.hint.warn{color:var(--brand);font-weight:700}
+:root[data-theme="dark"] .hint.warn{color:var(--gold)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hint.warn{color:var(--gold)}}
 .hint{font-size:.82rem;color:var(--muted);margin:10px 0 0;text-align:center}
 .lb{background:var(--scrim);flex-direction:column;align-items:center;justify-content:center;gap:12px;padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
 .lb-top{width:min(520px,100%);display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;padding:0 12px}
@@ -239,6 +243,11 @@ body{margin:0}
     <div class="field"><label for="fNotes">Cores, quantidades ou observações (opcional)</label><textarea id="fNotes"></textarea></div>
     <a class="btn wa block" id="sheetSend" href="#" target="_blank" rel="noopener">Enviar orçamento pelo WhatsApp</a>
     <p class="hint">O WhatsApp abre com a mensagem pronta. Você confere e envia.</p>
+    <div class="share" id="shareBox" hidden>
+      <button class="btn ghost block" id="shareBtn" type="button">Enviar com as fotos</button>
+      <p class="hint">As fotos das peças vão junto com a mensagem. Escolha o WhatsApp e depois o contato (79) 98821-5770.</p>
+      <p class="hint warn" id="shareMsg" role="status" hidden></p>
+    </div>
   </div>
 </div>
 
@@ -279,6 +288,8 @@ body{margin:0}
   function save(){ try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(e){} }
 
   var $ = function(id){ return document.getElementById(id); };
+  var canShareFiles = false;
+  try { canShareFiles = !!(navigator.share && navigator.canShare && navigator.canShare({files:[new File(['x'],'a.jpg',{type:'image/jpeg'})]})); } catch(e){ canShareFiles = false; }
   var cat = 'all', view = P.slice(), lbIdx = 0, lastFocus = null;
 
   function wa(text){ return 'https://wa.me/' + WA + '?text=' + encodeURIComponent(text); }
@@ -343,6 +354,7 @@ body{margin:0}
     $('heroWa').href = wa(GENERIC); $('footWa').href = wa(GENERIC);
     $('sheetTitle').textContent = items ? 'Sua lista' : 'Pedir orçamento';
     $('emptyMsg').hidden = items>0;
+    $('shareBox').hidden = !(canShareFiles && items>0);
   }
   function renderLines(){
     var keys = Object.keys(list).sort();
@@ -373,6 +385,27 @@ body{margin:0}
   function openLb(i){ lbIdx = i; syncLb(); openLayer($('lb'), $('lbClose')); }
   function stepLb(d){ lbIdx = (lbIdx + d + view.length) % view.length; syncLb(); }
 
+  function shareMsg(t){ var m = $('shareMsg'); m.textContent = t; m.hidden = !t; }
+  async function shareWithPhotos(){
+    var btn = $('shareBtn'), keys = Object.keys(list).sort().slice(0,30);
+    if (!keys.length) return;
+    btn.disabled = true; shareMsg('');
+    try {
+      var files = [];
+      for (var i=0;i<keys.length;i++){
+        var p = byRef[keys[i]], blob = await (await fetch(p.img)).blob();
+        var nm = ('REF ' + p.ref + ' ' + p.name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w -]/g,'') + '.jpg';
+        files.push(new File([blob], nm, {type:'image/jpeg'}));
+      }
+      var data = {files: files, text: listMsg()};
+      if (!navigator.canShare(data)) throw new Error('nofiles');
+      await navigator.share(data);
+    } catch(e){
+      if (!e || e.name!=='AbortError') shareMsg('Não foi possível anexar as fotos neste aparelho. Use o botão verde para enviar só a mensagem.');
+    }
+    btn.disabled = false;
+  }
+
   /* eventos */
   $('chips').addEventListener('click', function(e){
     var b = e.target.closest('[data-cat]'); if (!b) return;
@@ -391,6 +424,7 @@ body{margin:0}
   });
   $('fName').addEventListener('input', syncChrome);
   $('fNotes').addEventListener('input', syncChrome);
+  $('shareBtn').addEventListener('click', shareWithPhotos);
   $('hdrQuote').addEventListener('click', function(e){ if (total()) { e.preventDefault(); openSheet(); } });
   $('barOpen').addEventListener('click', openSheet);
   $('sheetClose').addEventListener('click', function(){ closeLayer($('sheet')); });
