@@ -99,7 +99,12 @@ h2{font:700 clamp(1.6rem,4vw,2.2rem)/1.1 var(--display);margin:0}
 .ref{position:absolute;left:10px;top:10px;background:var(--brand);color:var(--on-brand);font-size:.72rem;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px}
 .info{display:flex;flex-direction:column;gap:4px;padding:14px 14px 14px;flex:1}
 .info h3{font:700 1.1rem/1.2 var(--display);margin:0;text-wrap:balance}
-.info .cat{font-size:.82rem;color:var(--muted);margin:0 0 10px}
+.info .cat{font-size:.82rem;color:var(--muted);margin:0 0 6px}
+.info .price{font-size:.9rem;color:var(--muted);margin:0 0 10px;font-variant-numeric:tabular-nums}
+.info .price.set{font-size:1.05rem;font-weight:700;color:var(--brand)}
+:root[data-theme="dark"] .info .price.set{color:var(--gold)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .info .price.set{color:var(--gold)}}
+.lb-top .lbp{display:block;margin-top:2px;font-size:.9rem;color:rgba(255,255,255,.85)}
 .actions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
 .card .btn{font-size:.9rem;padding:9px 10px}
 
@@ -293,7 +298,7 @@ body{margin:0}
 
 <div class="layer lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Foto do produto">
   <div class="lb-top">
-    <div><small id="lbRef"></small><b id="lbName"></b></div>
+    <div><small id="lbRef"></small><b id="lbName"></b><span class="lbp" id="lbPrice"></span></div>
     <button class="x" id="lbClose" type="button" aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
   </div>
   <div class="stage">
@@ -311,6 +316,12 @@ body{margin:0}
 (function(){
   var WA = '5579988215770';
   var CATS = {noel:'Papai Noel', sagrado:'Presépios e anjos', luz:'Luminárias', enfeites:'Bonecos e enfeites'};
+  /* VALORES: preencha aqui o valor de cada peça (ex.: '89,90'). Vazio = "Valor sob consulta". */
+  var PRICES = {
+    '01':'','02':'','03':'','04':'','05':'','06':'','07':'','08':'','09':'',
+    '10':'','11':'','12':'','13':'','14':'','15':'','16':'','17':''
+  };
+  function fmt(v){ v = (v||'').trim(); if (!v) return ''; return /^R\$/i.test(v) ? v : 'R$ ' + v; }
   var P = [
     ['01','Papai Noel Vermelho','noel'],['02','Papai Noel Marrom','noel'],['03','Presépio Crochê','sagrado'],
     ['04','Sagrada Família','sagrado'],['05','Anjo Feliz Natal','sagrado'],['06','Anjo Casinha','sagrado'],
@@ -318,7 +329,7 @@ body{margin:0}
     ['10','Vila de Natal','luz'],['11','Xícara LED','luz'],['12','Boneco de Neve Derretido','enfeites'],
     ['13','Papai Noel Fogueira','noel'],['14','Calendário','enfeites'],['15','Quebra-Nozes','enfeites'],
     ['16','Gnomo Luminária','luz'],['17','Xícaras Casinha LED','luz']
-  ].map(function(p){return {ref:p[0],name:p[1],cat:p[2],img:'img/p'+p[0]+'.jpg'};});
+  ].map(function(p){return {ref:p[0],name:p[1],cat:p[2],img:'img/p'+p[0]+'.jpg',price:fmt(PRICES[p[0]])};});
   var byRef = {}; P.forEach(function(p){byRef[p.ref]=p;});
 
   var KEY = 'natal26-lista';
@@ -334,12 +345,12 @@ body{margin:0}
 
   function wa(text){ return 'https://wa.me/' + WA + '?text=' + encodeURIComponent(text); }
   var GENERIC = 'Olá! Vi o Catálogo Natal 2026 e gostaria de solicitar um orçamento.';
-  function oneMsg(p){ return 'Olá! Gostaria de um orçamento do Catálogo Natal 2026:\n\n• REF. ' + p.ref + ' – ' + p.name; }
+  function oneMsg(p){ return 'Olá! Gostaria de um orçamento do Catálogo Natal 2026:\n\n• REF. ' + p.ref + ' – ' + p.name + (p.price ? ' – ' + p.price : ''); }
   function total(){ return Object.keys(list).reduce(function(s,r){return s+list[r];},0); }
   function listMsg(){
     var keys = Object.keys(list).sort();
     if (!keys.length) return GENERIC;
-    var lines = keys.map(function(r){ return '• REF. ' + r + ' – ' + byRef[r].name + (list[r]>1 ? ' (' + list[r] + 'x)' : ''); });
+    var lines = keys.map(function(r){ return '• REF. ' + r + ' – ' + byRef[r].name + (list[r]>1 ? ' (' + list[r] + 'x)' : '') + (byRef[r].price ? ' – ' + byRef[r].price : ''); });
     var m = 'Olá! Gostaria de um orçamento do Catálogo Natal 2026:\n\n' + lines.join('\n');
     var n = $('fName').value.trim(), o = $('fNotes').value.trim();
     if (n) m += '\n\nNome: ' + n;
@@ -365,6 +376,7 @@ body{margin:0}
         + '<button type="button" class="shot" data-act="zoom" data-i="'+i+'" aria-label="Ampliar foto: '+p.name+'">'
         + '<img src="'+p.img+'" alt="'+p.name+'" loading="lazy" decoding="async" width="800" height="1066"><span class="ref">REF. '+p.ref+'</span></button>'
         + '<div class="info"><h3>'+p.name+'</h3><p class="cat">'+CATS[p.cat]+'</p>'
+        + '<p class="price'+(p.price?' set':'')+'">'+(p.price?p.price:'Valor sob consulta')+'</p>'
         + '<div class="actions">'
         + '<a class="btn wa" target="_blank" rel="noopener" href="'+wa(oneMsg(p))+'">Pedir orçamento</a>'
         + '<button type="button" class="btn ghost" data-act="toggle" aria-pressed="false"></button>'
@@ -400,7 +412,7 @@ body{margin:0}
     var keys = Object.keys(list).sort();
     $('lines').innerHTML = keys.map(function(r){
       var p = byRef[r];
-      return '<li class="line" data-ref="'+r+'"><img src="'+p.img+'" alt=""><div><b>'+p.name+'</b><small>REF. '+r+'</small></div>'
+      return '<li class="line" data-ref="'+r+'"><img src="'+p.img+'" alt=""><div><b>'+p.name+'</b><small>REF. '+r+(p.price?' · '+p.price:'')+'</small></div>'
         + '<div class="qty"><button type="button" data-q="-1" aria-label="Diminuir quantidade de '+p.name+'">−</button><output>'+list[r]+'</output><button type="button" data-q="1" aria-label="Aumentar quantidade de '+p.name+'">+</button></div></li>';
     }).join('');
   }
@@ -416,7 +428,7 @@ body{margin:0}
   function syncLb(){
     var p = view[lbIdx]; if (!p) return;
     $('lbImg').src = p.img; $('lbImg').alt = p.name;
-    $('lbRef').textContent = 'REF. ' + p.ref; $('lbName').textContent = p.name;
+    $('lbRef').textContent = 'REF. ' + p.ref; $('lbPrice').textContent = p.price || 'Valor sob consulta'; $('lbName').textContent = p.name;
     $('lbQuote').href = wa(oneMsg(p));
     var on = !!list[p.ref];
     $('lbAdd').innerHTML = toggleLabel(on); $('lbAdd').setAttribute('aria-pressed', on);
