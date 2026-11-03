@@ -480,6 +480,7 @@ body{margin:0}
           tick(); return true;
         } catch(e){ return false; }
       },
+      running: function(){ return !!ctx && ctx.state === 'running'; },
       pause: function(){ if (ctx) { try { ctx.suspend(); } catch(e){} } }
     };
   })();
@@ -512,7 +513,23 @@ body{margin:0}
   $('fName').addEventListener('input', syncChrome);
   $('fNotes').addEventListener('input', syncChrome);
   $('musicBtn').addEventListener('click', function(){ setMusic(!musicOn); });
-  document.addEventListener('visibilitychange', function(){ if (document.hidden && musicOn) setMusic(false); });
+  var resumeAfter = false;
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){ resumeAfter = musicOn; if (musicOn) setMusic(false); }
+    else if (resumeAfter){ resumeAfter = false; setMusic(true); }
+  });
+  /* tenta tocar ao abrir; se o navegador bloquear, toca no primeiro toque ou clique */
+  var armed = true, GEST = ['pointerdown','keydown','touchstart','click'];
+  function disarm(){ armed = false; GEST.forEach(function(g){ document.removeEventListener(g, onGesture, true); }); }
+  function onGesture(e){
+    if (!armed) return;
+    var onBtn = e.target && e.target.closest && e.target.closest('#musicBtn');
+    disarm();
+    if (!onBtn) setMusic(true);
+  }
+  GEST.forEach(function(g){ document.addEventListener(g, onGesture, true); });
+  MUSIC.play();
+  setTimeout(function(){ if (armed && MUSIC.running()){ disarm(); setMusic(true); } }, 350);
   $('shareBtn').addEventListener('click', shareWithPhotos);
   $('hdrQuote').addEventListener('click', function(e){ if (total()) { e.preventDefault(); openSheet(); } });
   $('barOpen').addEventListener('click', openSheet);
